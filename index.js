@@ -39,25 +39,12 @@ const urlSchema = new mongoose.Schema({
     unique: true,
   },
   seqId: {
-    type: String,
+    type: Number,
     unique: true,
   },
 });
 
 const urlModel = mongoose.model('urlModel', urlSchema);
-
-urlSchema.pre('save', function (next) {
-  counterModel.findByIdAndUpdate(
-    { _id: 'entityId' },
-    { $inc: { seq: 1 } },
-    function (err, counterModel) {
-      if (err) return next(err);
-      this.seqId = counterModel.seq;
-      next();
-    }
-  );
-});
-
 
 const addUrl = (theAddress, res) => {
   let newUrl = new urlModel({ url: theAddress });
@@ -65,7 +52,6 @@ const addUrl = (theAddress, res) => {
     if (err) {
       console.error(err);
     } else {
-      console.log('url added');
       res.json({ original_url: data.url, short_url: data.__v });
     }
   });
@@ -108,7 +94,40 @@ app.post(
       } else if (data != null) {
         res.json({ original_url: data.url, short_url: data.__v });
       } else {
-        console.log('not in db');
+        next();
+      }
+    });
+  },
+  // Increase counter by one and store at res.locals.counter
+  function (req, res, next) {
+    /*
+    let testCounter = new counterModel({ _id: 'urlCounter', seq: 0 });
+    testCounter.save(function (err, data) {
+      if (err) return console.error(err);
+      console.log(data);
+    });
+*/
+    counterModel.findByIdAndUpdate(
+      { _id: 'urlCounter' }, 
+      { $inc: { seq: 1 } },
+      function (err, data) {
+        if (err) {
+          return console.error(err);
+        } else {
+          res.locals.counter = data.seq + 1;
+          next();
+        }
+      }
+    );
+  },
+  //Insert missing entry into db
+  function (req, res, next) {
+    let newUrl = new urlModel({ url: req.body.url, seqId: res.locals.counter });
+    newUrl.save(function (err, data) {
+      if (err) {
+        console.error(err);
+      } else {
+        res.json({ original_url: data.url, short_url: data.seqId });
       }
     });
   }
