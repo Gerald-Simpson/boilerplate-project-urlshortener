@@ -46,17 +46,6 @@ const urlSchema = new mongoose.Schema({
 
 const urlModel = mongoose.model('urlModel', urlSchema);
 
-const addUrl = (theAddress, res) => {
-  let newUrl = new urlModel({ url: theAddress });
-  newUrl.save(function (err, data) {
-    if (err) {
-      console.error(err);
-    } else {
-      res.json({ original_url: data.url, short_url: data.__v });
-    }
-  });
-};
-
 app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
@@ -90,7 +79,7 @@ app.post(
   function (req, res, next) {
     urlModel.findOne({ url: req.body.url }, function (err, data) {
       if (err) {
-        console.error(err);
+        return console.error(err);
       } else if (data != null) {
         res.json({ original_url: data.url, short_url: data.__v });
       } else {
@@ -108,7 +97,7 @@ app.post(
     });
 */
     counterModel.findByIdAndUpdate(
-      { _id: 'urlCounter' }, 
+      { _id: 'urlCounter' },
       { $inc: { seq: 1 } },
       function (err, data) {
         if (err) {
@@ -125,13 +114,24 @@ app.post(
     let newUrl = new urlModel({ url: req.body.url, seqId: res.locals.counter });
     newUrl.save(function (err, data) {
       if (err) {
-        console.error(err);
+        return console.error(err);
       } else {
         res.json({ original_url: data.url, short_url: data.seqId });
       }
     });
   }
 );
+
+app.get('/api/shorturl/:seqNum', function (req, res, next) {
+  console.log('test');
+  urlModel.findOne({ seqId: req.params.seqNum }, function (err, data) {
+    if (err) {
+      return console.error(err);
+    } else {
+      res.redirect(data.url);
+    }
+  });
+});
 
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
