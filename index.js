@@ -59,7 +59,7 @@ app.post(
   '/api/shorturl',
   //Check formatting of url is ok
   function (req, res, next) {
-    if (!req.body.url.match(/^https:\/\/www.+/)) {
+    if (!req.body.url.match(/^https:\/\/+/)) {
       res.json({ error: 'Invalid URL' });
     } else {
       next();
@@ -123,7 +123,6 @@ app.post(
 );
 
 app.get('/api/shorturl/:seqNum', function (req, res, next) {
-  console.log('test');
   urlModel.findOne({ seqId: req.params.seqNum }, function (err, data) {
     if (err) {
       return console.error(err);
