@@ -81,7 +81,7 @@ app.post(
       if (err) {
         return console.error(err);
       } else if (data != null) {
-        res.json({ original_url: data.url, short_url: data.__v });
+        res.json({ original_url: data.url, short_url: data.seqId });
       } else {
         next();
       }
