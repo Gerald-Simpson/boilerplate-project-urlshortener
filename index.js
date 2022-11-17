@@ -67,7 +67,7 @@ app.post(
   },
   //Check url is an actual website
   function (req, res, next) {
-    dns.lookup(req.body.url.slice(8), function (err, address) {
+    dns.lookup(new URL(req.body.url).hostname, function (err, address) {
       if (err) {
         res.json({ error: 'Invalid URL' });
       } else {
@@ -103,7 +103,9 @@ app.post(
         if (err) {
           return console.error(err);
         } else {
+          console.log('data.seq', data.seq);
           res.locals.counter = data.seq + 1;
+          console.log('res.locals.counter', res.locals.counter);
           next();
         }
       }
@@ -111,11 +113,13 @@ app.post(
   },
   //Insert missing entry into db
   function (req, res, next) {
+    console.log('res.locals.counter', res.locals.counter);
     let newUrl = new urlModel({ url: req.body.url, seqId: res.locals.counter });
     newUrl.save(function (err, data) {
       if (err) {
         return console.error(err);
       } else {
+        console.log(data);
         res.json({ original_url: data.url, short_url: data.seqId });
       }
     });
